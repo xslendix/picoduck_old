@@ -10,37 +10,37 @@ const int PIN_B3 = 21;
 
 const char _programs[][1024] = {
 
-#include "Program1.h"
+#include "programs/Program1.h"
 ,
-#include "Program2.h"
+#include "programs/Program2.h"
 ,
-#include "Program3.h"
+#include "programs/Program3.h"
 ,
-#include "Program4.h"
+#include "programs/Program4.h"
 ,
-#include "Program5.h"
+#include "programs/Program5.h"
 ,
-#include "Program6.h"
+#include "programs/Program6.h"
 ,
-#include "Program7.h"
+#include "programs/Program7.h"
 ,
-#include "Program8.h"
+#include "programs/Program8.h"
 ,
-#include "Program9.h"
+#include "programs/Program9.h"
 ,
-#include "Program10.h"
+#include "programs/Program10.h"
 ,
-#include "Program11.h"
+#include "programs/Program11.h"
 ,
-#include "Program12.h"
+#include "programs/Program12.h"
 ,
-#include "Program13.h"
+#include "programs/Program13.h"
 ,
-#include "Program14.h"
+#include "programs/Program14.h"
 ,
-#include "Program15.h"
+#include "programs/Program15.h"
 ,
-#include "Program16.h"
+#include "programs/Program16.h"
 
 };
 
