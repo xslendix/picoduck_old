@@ -15,6 +15,8 @@ const char COMMAND_STRING            = '\x0B';
 const char COMMAND_STRING_DELAY      = '\x0C';
 const char COMMAND_REPEAT            = '\x0D';
 
+const char PROGRAM_END               = '\xFE';
+
 // TODO: Implement mouse commands
 
 #endif // COMMANDS_H

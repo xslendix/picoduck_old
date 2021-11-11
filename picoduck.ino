@@ -4,10 +4,14 @@
 
 const uint8_t HOLD_PIN = 14; // While this pin is high, the program wont start running.
 const uint8_t SEQ_PIN  = 15; // If this pin is high, all programs are gonna run sequencially.
+const uint8_t LED_PIN  = 25;
 
-void setup() {
+void setup()
+{
     pinMode(HOLD_PIN, INPUT);
     pinMode(SEQ_PIN, INPUT);
+
+    pinMode(LED_PIN, HIGH);
     InitProgramNumberPins();
 
     Keyboard.begin();
@@ -22,6 +26,8 @@ void setup() {
         RunProgramDataFromIndex(GetProgramIndexFromPins());
 
     Keyboard.releaseAll(); // Release all keys just in case
+
+    digitalWrite(LED_PIN, HIGH);
 };
 
 // Currently unused

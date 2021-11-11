@@ -24,15 +24,13 @@ byte GetProgramIndexFromPins()
     return final;
 }
 
-// TODO: Improve performace
-size_t c_strlen(const char *str)
+int strlen_c(const char *str)
 {
-    const char *s;
+    int len = 0;
+    for (int i = 0; str[i] != PROGRAM_END; i++)
+        len++;
 
-    // FIXME: Possible endless loop
-    for (s = str; *s != '\xFF'; ++s) ;
-
-    return (s - str);
+    return len;
 }
 
 void RunProgramDataFromIndex(uint8_t progNum)
@@ -40,129 +38,110 @@ void RunProgramDataFromIndex(uint8_t progNum)
 #define CUR_PROG _programs[progNum]
 
     int default_delay = 0;
+    int prog_length = strlen_c(CUR_PROG);
 
-    for (size_t i = 0; i < strlen(CUR_PROG); i++) {
+    for (int i = 0; i < prog_length; i++) {
         char ch = CUR_PROG[i];
-        int new_delay = 0;
-        size_t length, n = 0;
-        char* location;
 
-        switch (ch)
-        {
-            case COMMAND_WRITE_CHARACTER: {
-                i++;
+        if (ch == COMMAND_WRITE_CHARACTER) {
+            i++;
+            ch = CUR_PROG[i];
+            Keyboard.write(ch);
+        }
+        if (ch == COMMAND_ALT) {
+            Keyboard.press(KEY_LEFT_ALT);
+            delay(100);
+            i++;
+            ch = CUR_PROG[i];
+            Keyboard.write(ch);
+        }
+        if (ch == COMMAND_CONTROL) {
+            Keyboard.press(KEY_LEFT_CTRL);
+            i++;
+            ch = CUR_PROG[i];
+            Keyboard.write(ch);
+        }
+        if (ch == COMMAND_CONTROL_ALT) {
+            Keyboard.press(KEY_LEFT_CTRL);
+            Keyboard.press(KEY_LEFT_ALT);
+            delay(100);
+            i++;
+            ch = CUR_PROG[i];
+            Keyboard.write(ch);
+        }
+        if (ch == COMMAND_DEFAULT_DELAY) {
+            i++;
+            ch = CUR_PROG[i];
+            default_delay = ch << 8;
+            i++;
+            ch = CUR_PROG[i];
+            default_delay |= ch;
+        }
+        if (ch == COMMAND_DELAY) {
+            int new_delay = 0;
+            i++;
+            ch = CUR_PROG[i];
+            new_delay = ch << 8;
+            i++;
+            ch = CUR_PROG[i];
+            new_delay |= ch;
+            ch = CUR_PROG[i];
+            delay(new_delay);
+        }
+        if (ch == COMMAND_GUI) {
+            Keyboard.press(KEY_LEFT_GUI);
+            delay(100);
+            i++;
+            ch = CUR_PROG[i];
+            Keyboard.write(ch);
+        }
+        if (ch == COMMAND_ALT_SHIFT) {
+            Keyboard.press(KEY_LEFT_ALT);
+            Keyboard.press(KEY_LEFT_SHIFT);
+            delay(100);
+        }
+        if (ch == COMMAND_SHIFT) {
+            Keyboard.press(KEY_LEFT_SHIFT);
+            delay(100);
+            i++;
+            ch = CUR_PROG[i];
+            Keyboard.write(ch);
+        }
+        if (ch == COMMAND_STRING) {
+            i++;
+            while (1) {
                 ch = CUR_PROG[i];
-                Keyboard.write(ch);
-                break;
-            }
-            case COMMAND_ALT: {
-                Keyboard.press(KEY_LEFT_ALT);
-                i++;
-                ch = CUR_PROG[i];
-                Keyboard.write(ch);
-                Keyboard.release(KEY_LEFT_ALT);
-                break;
-            }
-            case COMMAND_CONTROL: {
-                Keyboard.press(KEY_LEFT_CTRL);
-                i++;
-                ch = CUR_PROG[i];
-                Keyboard.write(ch);
-                Keyboard.release(KEY_LEFT_CTRL);
-                break;
-            }
-            case COMMAND_CONTROL_ALT: {
-                Keyboard.press(KEY_LEFT_CTRL);
-                Keyboard.press(KEY_LEFT_ALT);
-                i++;
-                ch = CUR_PROG[i];
-                Keyboard.write(ch);
-                Keyboard.release(KEY_LEFT_CTRL);
-                Keyboard.release(KEY_LEFT_ALT);
-                break;
-            }
-            case COMMAND_DEFAULT_DELAY: {
-                i++;
-                ch = CUR_PROG[i];
-                default_delay = ch >> 8;
-                i++;
-                ch = CUR_PROG[i];
-                default_delay += ch;
-                break;
-            }
-            case COMMAND_DELAY: {
-                new_delay = 0;
-                i++;
-                ch = CUR_PROG[i];
-                new_delay = ch >> 8;
-                i++;
-                ch = CUR_PROG[i];
-                new_delay += ch;
-                delay(new_delay);
-            }
-            case COMMAND_GUI: {
-                Keyboard.press(KEY_LEFT_GUI);
-                i++;
-                ch = CUR_PROG[i];
-                Keyboard.write(ch);
-                Keyboard.release(KEY_LEFT_GUI);
-            }
-            case COMMAND_ALT_SHIFT: {
-                Keyboard.press(KEY_LEFT_ALT);
-                Keyboard.press(KEY_LEFT_SHIFT);
-                Keyboard.release(KEY_LEFT_ALT);
-                Keyboard.release(KEY_LEFT_SHIFT);
-            }
-            case COMMAND_SHIFT: {
-                Keyboard.press(KEY_LEFT_SHIFT);
-                i++;
-                ch = CUR_PROG[i];
-                Keyboard.write(ch);
-                Keyboard.release(KEY_LEFT_SHIFT);
-                break;
-            }
-            case COMMAND_STRING: {
-                i++;
-                location = (char*) &CUR_PROG[i];
-                length = c_strlen(location);
-                Keyboard.write((const uint8_t*)location, length);
-                break;
-            }
-            case COMMAND_STRING_DELAY: {
-                new_delay = 0;
-                i++;
-                ch = CUR_PROG[i];
-                new_delay = ch >> 8;
-                i++;
-                ch = CUR_PROG[i];
-                new_delay += ch;
-
-                i++;
-                location = (char*) &CUR_PROG[i];
-                length = c_strlen(location);
-
-                n = 0;
-                while (length--) {
-                    if (*location != '\r') {
-                        if (Keyboard.write(*location))
-                            n++;
-                        else
-                            break;
-                    }
-                    location++;
-                    delay(new_delay);
+                if (ch == '\0' || ch == '\xFF') {
+                    break;
                 }
-
-                Keyboard.write((const uint8_t*)location, length);
-                break;
+                Keyboard.write(ch);
+                i++;
             }
-            case COMMAND_REPEAT: {
-                // TODO: Implement
-                break;
+        }
+        if (ch == COMMAND_STRING_DELAY) {
+            int new_delay = 0;
+            i++;
+            ch = CUR_PROG[i];
+            new_delay = ch << 8;
+            i++;
+            ch = CUR_PROG[i];
+            new_delay |= ch;
+
+            i++;
+            while (1) {
+                ch = CUR_PROG[i];
+                if (ch == '\0' || ch == '\xFF') {
+                    break;
+                }
+                Keyboard.write(ch);
+                i++;
+                delay(new_delay);
             }
         }
 
+        Keyboard.releaseAll();
+
         if (default_delay != 0)
             delay(default_delay);
-    };
+    }
 }
