@@ -107,37 +107,6 @@ void RunProgramDataFromIndex(uint8_t progNum)
             ch = CUR_PROG[i];
             Keyboard.write(ch);
         }
-        if (ch == COMMAND_STRING) {
-            i++;
-            while (1) {
-                ch = CUR_PROG[i];
-                if (ch == '\0' || ch == '\xFF') {
-                    break;
-                }
-                Keyboard.write(ch);
-                i++;
-            }
-        }
-        if (ch == COMMAND_STRING_DELAY) {
-            int new_delay = 0;
-            i++;
-            ch = CUR_PROG[i];
-            new_delay = ch << 8;
-            i++;
-            ch = CUR_PROG[i];
-            new_delay |= ch;
-
-            i++;
-            while (1) {
-                ch = CUR_PROG[i];
-                if (ch == '\0' || ch == '\xFF') {
-                    break;
-                }
-                Keyboard.write(ch);
-                i++;
-                delay(new_delay);
-            }
-        }
 
         Keyboard.releaseAll();
 

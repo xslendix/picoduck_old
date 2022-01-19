@@ -1,15 +1,29 @@
 #!/usr/bin/env python3
 
 import os
+import argparse
 
 print("DuckyScript to PicoDuck converter")
-print('Please paste your script here, at the end, type "EOF":')
 lines = ['']
 
-while lines[-1].strip() != 'EOF':
-    lines.append(input())
+parser = argparse.ArgumentParser()
+parser.add_argument('--program', '-p', type=int, default=0)
+parser.add_argument('--file', '-f', type=str, default='')
 
-lines = lines[1:-1]
+args = parser.parse_args()
+
+read_from_file = os.path.exists(args.file) and os.path.isfile(args.file)
+program_num = args.program
+
+if not read_from_file:
+    print('Please paste your script here, at the end, type "EOF":')
+    while lines[-1].strip() != 'EOF':
+        lines.append(input())
+
+    lines = lines[1:-1]
+else:
+    with open(args.file, 'r') as f:
+        lines = [a[:-2] for a in f.readlines()]
 
 print('Parsing...')
 
@@ -79,7 +93,7 @@ def getKeyCode(keyname):
 
         return str((num+111).to_bytes(1, byteorder='big'))[2:-1]
 
-    if keyname in 'abcdefghijklmnopqrstuvwxyz':
+    if keyname.lower() in 'abcdefghijklmnopqrstuvwxyz':
         return keyname
 
     return None
@@ -88,11 +102,12 @@ def getKeyCode(keyname):
 def replaceSpecial(string):
     return string.replace('\\', '\\\\').replace('\n', '\\n').replace('\t', '\\t').replace('"', '\\"').replace('\'', '\\\'').replace('\r', '\\r').replace('%', '\\%')
 
-# Parsing
-for i, line in enumerate(lines):
-    line = line.strip()
+def parseLine(i, line):
+    global final
+
+    line = line.lstrip()
     if line.lower().startswith('rem'):
-        continue
+        return 'continue'
 
     argv = line.split(' ');
 
@@ -102,75 +117,96 @@ for i, line in enumerate(lines):
 
         keycode = getKeyCode(argv[1])
         if keycode == None and (not argv[0] in ['default_delay', 'defaultdelay', 'delay', 'string_delay', 'repeat', 'string']):
-            continue
+            return 'continue'
 
         if argv[0] == 'alt':
-            final += b'\\x02""' + keycode.encode()
+            if keycode != None:
+                final += b'\\x02""' + keycode.encode()
         elif argv[0] in ['ctrl', 'control']:
-            final += b'\\x03""' + keycode.encode()
-        elif argv[0] == 'ctrl-alt':
-            final += b'\\x04""' + keycode.encode()
-        elif argv[0] == 'ctrl-shift':
-            final += b'\\x05""' + keycode.encode()
-        elif argv[0] in ['default_delay', 'defaultdelay']:
+            if keycode != None:
+                final += b'\\x03""' + keycode.encode()
+        elif argv[0] in ['ctrl_alt', 'ctrl-alt']:
+            if keycode != None:
+                final += b'\\x04""' + keycode.encode()
+        elif argv[0] in ['ctrl_shift', 'ctrl-shift']:
+            if keycode != None:
+                final += b'\\x05""' + keycode.encode()
+        elif argv[0] in ['default_delay', 'defaultdelay', 'default-delay']:
             try:
-                final += b'\\x06""' + str(int(argv[1]).to_bytes(2, byteorder='big'))[2:-1].encode()
+                num = str(int(argv[1]).to_bytes(2, byteorder='big'))[2:-1]
+                num = num[:4] + '""' + num[4:]
+                final += b'\\x06""' + num.encode()
             except:
                 print(f'Failed to parse number on line {i}. Skipping instruction.')
         elif argv[0] == 'delay':
             try:
-                final += b'\\x07""' + str(int(argv[1]).to_bytes(2, byteorder='big'))[2:-1].encode()
+                num = str(int(argv[1]).to_bytes(2, byteorder='big'))[2:-1]
+                num = num[:4] + '""' + num[4:]
+                final += b'\\x07""' + num.encode()
             except:
                 print(f'Failed to parse number on line {i}. Skipping instruction.')
         elif argv[0] in ['gui', 'windows']:
             final += b'\\x08""' + keycode.encode()
-        elif argv[0] == 'alt-shift':
+        elif argv[0] in ['alt_shift', 'alt-shift']:
             final += b'\\x09""'
         elif argv[0] == 'shift':
             final += b'\\x0A""' + keycode.encode()
         elif argv[0] == 'string':
-            final += b'\\x0B""' + replaceSpecial(' '.join(argv[1:])).encode() + b'\\xFF'
-        elif argv[0] == 'string_delay':
-            if len(argv) < 3:
-                print(f'Not enough arguments provided for STRING_DELAY on line {i}. Skipping instruction.')
-                continue
-
-            try:
-                final += b'\\x0C' + str(int(argv[1]).to_bytes(2, byteorder='big'))[2:-1].encode() + b'""' + argv[2:].encode() + b'\\xFF'
-            except:
-                print(f'Failed to parse number on line {i}. Skipping instruction.')
+            #final += b'\\x0B""' + replaceSpecial(' '.join(argv[1:])).encode() + b'\\xFF'
+            #text = line[line.find('string '):];
+            for i in replaceSpecial(' '.join(argv[1:])):
+                final += b'\\x01""'
+                final += i.encode()
         elif argv[0] == 'repeat':
-            final += b'\\x0D'
+            final += b'"'
+            for x in range(int(argv[1])):
+                ret = parseLine(i-1, lines[i-1])
+                if ret != None:
+                    return ret
+            final += b'"'
     else:
         keycode = getKeyCode(argv[0])
         if keycode != None:
-            final += b'\\x01' + keycode.encode()
-    final += b'"'
+            final += b'\\x01""' + keycode.encode()
+    final += b'" // ' + ' '.join(argv).encode() + b'\n'
 
-print('Done!')
-print('Which program do you wish to overwrite?')
+for i, line in enumerate(lines):
+    if line.endswith(' ') or line.endswith('\t'):
+        print(f'Warning! Line {i+1} has a trailing newline!')
+
+# Parsing
+for i, line in enumerate(lines):
+    if parseLine(i, line) == 'continue':
+        continue
+
+final += b'"\\xFE"'
+
 filename = 'programs/Program'
 
-while True:
-    num = 0
-    inp = input('[1-16] or quit: ')
-    if inp == 'quit':
-        os.exit(0)
-    else:
-        try:
-            num = int(inp)
-        except:
-            num = 0
+if program_num == 0 or program_num > 16:
+    print('Which program do you wish to overwrite?')
+    while True:
+        num = 0
+        inp = input('[1-16] or quit: ')
+        if inp == 'quit':
+            os.exit(0)
+        else:
+            try:
+                num = int(inp)
+            except:
+                num = 0
 
-    if num < 1 or num > 16:
-        print('Invalid option! Please pick again.')
-    else:
-        filename += str(num) + '.h'
-        break
+        if num < 1 or num > 16:
+            print('Invalid option! Please pick again.')
+        else:
+            filename += str(num) + '.h'
+            break
+else:
+    filename += str(program_num) + '.h'
 
 with open(filename, 'wb+') as f:
     f.write(final)
     f.close()
 
-print('Done! Press ENTER to continue.')
-input()
+print('Done!')
+

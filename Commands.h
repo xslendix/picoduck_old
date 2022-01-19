@@ -11,9 +11,6 @@ const char COMMAND_DELAY             = '\x07';
 const char COMMAND_GUI               = '\x08';
 const char COMMAND_ALT_SHIFT         = '\x09';
 const char COMMAND_SHIFT             = '\x0A';
-const char COMMAND_STRING            = '\x0B';
-const char COMMAND_STRING_DELAY      = '\x0C';
-const char COMMAND_REPEAT            = '\x0D';
 
 const char PROGRAM_END               = '\xFE';
 

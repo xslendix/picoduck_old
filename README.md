@@ -28,13 +28,15 @@
 ## Installing
 
  - Run `generateProgram.py`, this will allow you to easily create a program for your PicoDuck.
+   You can run it with the `-f` option to add a program from a file or use the `-p` to specify
+   a program number/slot.
  - Paste Ducky Script code
  - Press ENTER, type `EOF` and press ENTER again
  - Choose a slot for the program to live in. Available options are 1->16 or quit to cancel.
  - Open the Arduino IDE
  - Go to Tools->Flash Size and set it to `2MB (no FS)`
  - (Optional) Go to Tools->CPU Speed and set it to `125 MHz`
- - (Optional) Go to Tools->Optimize and set it to `Optimize More (-O2)`
+ - (Optional) Go to Tools->Optimize and set it to `Optimize More (-O2)` or `Optimize Even More (-O3)`
  - Go to Tools->USB Stack and set it to `Adafruit TinyUSB`
  - Hold the `BOOTSEL` button on the Raspberry Pi Pico and plug the device into the computer via USB. After `RPI-RP2` appears in the file manager, you can release the button.
  - Click on the veryfy button inside the Arduino IDE. This will compile the code into the output folder. The output folder is usually in:
@@ -53,5 +55,4 @@ Use the HOLD switch (Sw. 1) to prevent the PicoDuck to run the program(s) immedi
 
 ## TODO
 
- - Implement REPEAT
  - Implement mouse support
