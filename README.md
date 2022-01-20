@@ -27,9 +27,7 @@
 
 ## Installing
 
- - Run `generateProgram.py`, this will allow you to easily create a program for your PicoDuck.
-   You can run it with the `-f` option to add a program from a file or use the `-p` to specify
-   a program number/slot.
+ - Run `generateProgram.py`, this will allow you to easily create a program for your PicoDuck. You can run it with the `-f` option to add a program from a file or use the `-p` to specify a program number/slot.
  - Paste Ducky Script code
  - Press ENTER, type `EOF` and press ENTER again
  - Choose a slot for the program to live in. Available options are 1->16 or quit to cancel.
@@ -53,6 +51,12 @@ Use the SEQ switch (Sw. 2) to put the PicoDuck into _sequence mode_ which runs a
 
 Use the HOLD switch (Sw. 1) to prevent the PicoDuck to run the program(s) immediately after being plugged into the computer.
 
-## TODO
+## DuckyScript+ extensions:
 
- - Implement mouse support
+ - Both `-` and `_` are accepted. For example: `ctrl_alt` or `ctrl-alt`
+ - `MOUSE_LEFT (CLICK|HOLD|RELEASE)` - Click/hold/release the left mouse button
+ - `MOUSE_MIDDLE|MOUSE_MID (CLICK|HOLD|RELEASE)` - Click/hold/release the middle mouse button
+ - `MOUSE_RIGHT (CLICK|HOLD|RELEASE)` - Click/hold/release the right mouse button
+ - `MOUSE_MOVE [x] [y]` - Move the mouse to x, y (relative coordinates)
+ - `MOUSE_WHEEL [n]` - Move the mouse wheel n times. N needs to be a value of 0 to 128 and can be both positive and negative
+

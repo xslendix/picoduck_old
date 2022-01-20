@@ -12,6 +12,19 @@ const char COMMAND_GUI               = '\x08';
 const char COMMAND_ALT_SHIFT         = '\x09';
 const char COMMAND_SHIFT             = '\x0A';
 
+// DuckyScript+ Extenions
+const char COMMAND_MOUSE_LEFT          = '\x0A';
+const char COMMAND_MOUSE_MIDDLE        = '\x0B';
+const char COMMAND_MOUSE_RIGHT         = '\x0C';
+const char COMMAND_MOUSE_MOVE          = '\x0D';
+const char COMMAND_MOUSE_WHEEL         = '\x0E';
+
+// Mouse modes
+const int MOUSE_CLICK   = 1;
+const int MOUSE_HOLD    = 2;
+const int MOUSE_RELEASE = 3;
+
+// PicoDuck specific
 const char PROGRAM_END               = '\xFE';
 
 // TODO: Implement mouse commands

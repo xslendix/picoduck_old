@@ -3,7 +3,7 @@
 import os
 import argparse
 
-print("DuckyScript to PicoDuck converter")
+print("DuckyScript+ to PicoDuck converter")
 lines = ['']
 
 parser = argparse.ArgumentParser()
@@ -23,7 +23,7 @@ if not read_from_file:
     lines = lines[1:-1]
 else:
     with open(args.file, 'r') as f:
-        lines = [a[:-2] for a in f.readlines()]
+        lines = [a.replace('\n', '') for a in f.readlines()]
 
 print('Parsing...')
 
@@ -106,18 +106,22 @@ def parseLine(i, line):
     global final
 
     line = line.lstrip()
-    if line.lower().startswith('rem'):
+    if line.lower().startswith('rem ') or line.startswith('//'):
         return 'continue'
 
     argv = line.split(' ');
 
-    final += b'"'
-    if len(argv) > 1:
-        argv[0] = argv[0].strip().lower()
+    argv[0] = argv[0].strip()
 
-        keycode = getKeyCode(argv[1])
-        if keycode == None and (not argv[0] in ['default_delay', 'defaultdelay', 'delay', 'string_delay', 'repeat', 'string']):
-            return 'continue'
+    mouse_names = argv[0].startswith('mouse_')
+
+    final += b'"'
+    if len(argv) > 1 or mouse_names:
+        argv[0] = argv[0].lower()
+
+        keycode = None
+        if not mouse_names:
+            keycode = getKeyCode(argv[1])
 
         if argv[0] == 'alt':
             if keycode != None:
@@ -137,23 +141,21 @@ def parseLine(i, line):
                 num = num[:4] + '""' + num[4:]
                 final += b'\\x06""' + num.encode()
             except:
-                print(f'Failed to parse number on line {i}. Skipping instruction.')
+                print(f'Failed to parse number on line {i+1}. Skipping instruction {argv[0]}.')
         elif argv[0] == 'delay':
             try:
                 num = str(int(argv[1]).to_bytes(2, byteorder='big'))[2:-1]
                 num = num[:4] + '""' + num[4:]
                 final += b'\\x07""' + num.encode()
             except:
-                print(f'Failed to parse number on line {i}. Skipping instruction.')
-        elif argv[0] in ['gui', 'windows']:
+                print(f'Failed to parse number on line {i+1}. Skipping instruction {argv[0]}.')
+        elif argv[0] in ['gui', 'windows', 'win']:
             final += b'\\x08""' + keycode.encode()
         elif argv[0] in ['alt_shift', 'alt-shift']:
             final += b'\\x09""'
         elif argv[0] == 'shift':
             final += b'\\x0A""' + keycode.encode()
         elif argv[0] == 'string':
-            #final += b'\\x0B""' + replaceSpecial(' '.join(argv[1:])).encode() + b'\\xFF'
-            #text = line[line.find('string '):];
             for i in replaceSpecial(' '.join(argv[1:])):
                 final += b'\\x01""'
                 final += i.encode()
@@ -164,6 +166,45 @@ def parseLine(i, line):
                 if ret != None:
                     return ret
             final += b'"'
+        elif argv[0] in ['mouse_left', 'mouse-left']:
+            mode = b'\\x01'
+            if len(argv) > 1:
+                if argv[1].lower() == 'hold':
+                    mode = b'\\x02'
+                elif argv[1].lower() == 'release':
+                    mode = b'\\x03'
+            final += b'\\x0A' + mode
+        elif argv[0] in ['mouse_mid', 'mouse-mid', 'mouse_middle', 'mouse-middle']:
+            mode = b'\\x01'
+            if len(argv) > 1:
+                if argv[1].lower() == 'hold':
+                    mode = b'\\x02'
+                elif argv[1].lower() == 'release':
+                    mode = b'\\x03'
+            final += b'\\x0B' + mode
+        elif argv[0] in ['mouse_right', 'mouse-right']:
+            mode = b'\\x01'
+            if len(argv) > 1:
+                if argv[1].lower() == 'hold':
+                    mode = b'\\x02'
+                elif argv[1].lower() == 'release':
+                    mode = b'\\x03'
+            final += b'\\x0C' + mode
+        elif argv[0] in ['mouse_move', 'mouse-move']:
+            try:
+                num = str(int(int(argv[1]) + 0xffff/2).to_bytes(2, byteorder='big'))[2:-1]
+                num = num[:4] + '""' + num[4:]
+                num2 = str(int(int(argv[2]) + 0xffff/2).to_bytes(2, byteorder='big'))[2:-1]
+                num2 = num2[:4] + '""' + num2[4:]
+                final += b'\\x0D""' + num.encode() + b'""' + num2.encode()
+            except Exception as e:
+                print(f'Failed to parse number(s) on line {i+1}. Skipping instruction {argv[0]}.')
+        elif argv[0] in ['mouse_wheel', 'mouse-wheel']:
+            try:
+                amount = int(argv[1]) + 127
+                final += b'\\x0E\\x'+hex(amount)[-2:].encode()
+            except Exception as e:
+                print(f'Failed to parse number on line {i+1}. Skipping instruction {argv[0]}.')
     else:
         keycode = getKeyCode(argv[0])
         if keycode != None:
@@ -189,7 +230,7 @@ if program_num == 0 or program_num > 16:
         num = 0
         inp = input('[1-16] or quit: ')
         if inp == 'quit':
-            os.exit(0)
+            exit(0)
         else:
             try:
                 num = int(inp)

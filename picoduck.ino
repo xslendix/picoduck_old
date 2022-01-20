@@ -2,8 +2,8 @@
 
 #include "Programs.h"
 
-const uint8_t HOLD_PIN = 14; // While this pin is high, the program wont start running.
-const uint8_t SEQ_PIN  = 15; // If this pin is high, all programs are gonna run sequencially.
+const uint8_t HOLD_PIN = 0; // While this pin is high, the program wont start running.
+const uint8_t SEQ_PIN  = 1; // If this pin is high, all programs are gonna run sequencially.
 const uint8_t LED_PIN  = 25;
 
 void setup()
@@ -15,6 +15,8 @@ void setup()
     InitProgramNumberPins();
 
     Keyboard.begin();
+    Mouse.begin();
+
     delay(1000); // Wait for keyboard to be detected
 
     while (digitalRead(HOLD_PIN) == HIGH) delay(100);
